@@ -1,0 +1,806 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Who Drinks What</title>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Who Drinks What">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="theme-color" content="#EDF0F5" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0E1626" media="(prefers-color-scheme: dark)">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" href="apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;800&family=Figtree:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root { color-scheme: light; padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); }
+html { -webkit-text-size-adjust: 100%; }
+body { margin: 0; }
+img { max-width: 100%; }
+[hidden] { display: none !important; }
+</style>
+<style>
+/* Layout: one column, big tap targets, one screen at a time. Poppy red on navy, the colours of the hall. */
+:root {
+  --bg: #EDF0F5;
+  --surface: #FFFFFF;
+  --fg: #14213A;
+  --muted: #5A6781;
+  --line: #C6CFDF;
+  --chip: #DFE5F0;
+  --accent: #C21F32;
+  --on-accent: #FFFFFF;
+  --font-display: "Bricolage Grotesque", "Avenir Next", "Helvetica Neue", Arial, sans-serif;
+  --font-body: "Figtree", "Avenir Next", "Helvetica Neue", Arial, sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0E1626;
+    --surface: #17233D;
+    --fg: #E7ECF5;
+    --muted: #9AA7C0;
+    --line: #2C3B5C;
+    --chip: #20304F;
+    --accent: #FF6B76;
+    --on-accent: #1A0A0D;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0E1626;
+  --surface: #17233D;
+  --fg: #E7ECF5;
+  --muted: #9AA7C0;
+  --line: #2C3B5C;
+  --chip: #20304F;
+  --accent: #FF6B76;
+  --on-accent: #1A0A0D;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body {
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--font-body);
+  font-size: 18px;
+  line-height: 1.4;
+  padding-block: 20px 48px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+.app { max-width: 720px; margin: 0 auto; display: flex; flex-direction: column; gap: 18px; }
+.top { display: flex; flex-direction: column; align-items: flex-start; gap: 10px; }
+h1 {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: clamp(1.9rem, 6vw, 2.7rem);
+  line-height: 1.05;
+  letter-spacing: -0.01em;
+  margin: 0;
+  text-wrap: balance;
+}
+h2 { font-family: var(--font-display); font-size: 1.25rem; margin: 0; }
+p { margin: 0; }
+.muted { color: var(--muted); }
+.small { font-size: 0.9rem; }
+button, input, textarea { font: inherit; color: inherit; }
+button { cursor: pointer; }
+button:focus-visible, input:focus-visible, textarea:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: 2px;
+}
+.back {
+  min-height: 44px; padding: 8px 16px;
+  background: transparent; border: 2px solid var(--line); border-radius: 999px;
+}
+.big {
+  display: flex; flex-direction: column; align-items: flex-start; gap: 4px;
+  width: 100%; min-height: 92px; padding: 18px 22px; text-align: left;
+  background: var(--surface); border: 2px solid var(--line); border-radius: 10px;
+}
+.big strong { font-family: var(--font-display); font-size: 1.7rem; font-weight: 800; line-height: 1.1; }
+.big span { color: var(--muted); font-size: 0.95rem; }
+.big.primary { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
+.big.primary span { color: inherit; opacity: 0.9; }
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }
+.tile {
+  display: flex; flex-direction: column; justify-content: space-between; gap: 8px;
+  min-height: 76px; padding: 12px 14px; text-align: left;
+  background: var(--surface); border: 2px solid var(--line); border-radius: 10px;
+  font-weight: 600; min-width: 0; overflow-wrap: anywhere;
+}
+.count { font-weight: 400; color: var(--muted); font-size: 0.85rem; font-variant-numeric: tabular-nums; }
+.list { display: flex; flex-direction: column; gap: 8px; }
+.row {
+  display: flex; flex-direction: column; align-items: flex-start; gap: 2px;
+  width: 100%; min-height: 64px; padding: 12px 16px; text-align: left;
+  background: var(--surface); border: 2px solid var(--line); border-radius: 10px; min-width: 0;
+}
+.row .nm { font-weight: 600; font-size: 1.15rem; overflow-wrap: anywhere; }
+.row .sub { color: var(--muted); font-size: 0.92rem; overflow-wrap: anywhere; }
+.letter { font-family: var(--font-display); font-weight: 800; color: var(--accent); font-size: 1.15rem; margin: 10px 0 0; }
+.chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.chip, .pill {
+  min-height: 44px; padding: 8px 16px; border-radius: 999px;
+  border: 2px solid var(--line); background: var(--surface);
+  display: inline-flex; align-items: center;
+}
+.pill { min-height: 0; padding: 4px 14px; background: var(--chip); border-color: var(--chip); font-weight: 500; }
+.chip[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
+.field { display: flex; flex-direction: column; gap: 6px; }
+.field > label, .label { font-size: 0.8rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+input[type="text"], textarea {
+  width: 100%; min-height: 52px; padding: 10px 14px;
+  background: var(--surface); border: 2px solid var(--line); border-radius: 10px;
+}
+textarea { min-height: 96px; resize: vertical; }
+.inline { display: flex; gap: 8px; }
+.inline input { flex: 1; min-width: 0; }
+.btn {
+  min-height: 52px; padding: 10px 20px; border-radius: 10px;
+  background: var(--surface); border: 2px solid var(--line); font-weight: 600;
+}
+.btn.accent { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
+.btn.link { background: transparent; border-color: transparent; text-decoration: underline; padding-inline: 8px; }
+.actions { display: flex; flex-wrap: wrap; gap: 10px; }
+.tag {
+  font-size: 0.7rem; letter-spacing: 0.08em; text-transform: uppercase; font-weight: 600;
+  color: var(--muted); border: 1px solid var(--line); border-radius: 4px; padding: 1px 6px; margin-left: 8px;
+  vertical-align: middle;
+}
+.flash { background: var(--chip); border-radius: 10px; padding: 12px 16px; font-weight: 500; }
+.err { color: var(--accent); font-weight: 600; min-height: 1.4em; }
+.notes { background: var(--surface); border: 2px solid var(--line); border-radius: 10px; padding: 14px 16px; overflow-wrap: anywhere; }
+.drow { display: flex; gap: 8px; align-items: center; }
+.drow input { flex: 1; min-width: 0; }
+.pair { display: flex; gap: 8px; align-items: stretch; }
+.pair .row { flex: 1 1 0; width: auto; }
+.addbtn { min-width: 108px; padding: 8px 12px; border-radius: 10px; border: 2px solid var(--accent); background: var(--surface); color: var(--accent); font-weight: 700; }
+.addbtn[aria-pressed="true"] { background: var(--accent); color: var(--on-accent); }
+.chip.dchip { min-height: 56px; font-weight: 600; font-size: 1.05rem; }
+.flash { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.group { display: flex; flex-direction: column; gap: 8px; padding: 12px 16px; background: var(--surface); border: 2px solid var(--line); border-radius: 10px; }
+.line { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.line .dn { flex: 1; min-width: 0; overflow-wrap: anywhere; font-size: 1.1rem; font-weight: 600; }
+.line .tot { font-weight: 700; font-variant-numeric: tabular-nums; }
+.step { display: flex; align-items: center; gap: 6px; }
+.step button { min-width: 52px; min-height: 52px; border-radius: 10px; border: 2px solid var(--line); background: var(--bg); font-size: 1.4rem; font-weight: 700; }
+.step .q { min-width: 32px; text-align: center; font-weight: 700; font-size: 1.15rem; font-variant-numeric: tabular-nums; }
+.bar { position: fixed; left: 0; right: 0; bottom: 0; z-index: 5; display: flex; justify-content: center; background: var(--bg); border-top: 2px solid var(--line); padding-top: 10px; padding-bottom: calc(10px + env(safe-area-inset-bottom, 0px)); padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+.bar button { width: 100%; max-width: 720px; min-height: 56px; display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 0 20px; border: 0; border-radius: 10px; background: var(--accent); color: var(--on-accent); font-weight: 700; font-size: 1.1rem; }
+body.has-bar { padding-bottom: calc(110px + env(safe-area-inset-bottom, 0px)); }
+.sofar { font-weight: 400; color: var(--muted); font-size: 0.9rem; }
+.line h2 { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+details { background: var(--surface); border: 2px solid var(--line); border-radius: 10px; padding: 0 16px; }
+details[open] { padding-bottom: 14px; }
+summary { min-height: 52px; display: flex; align-items: center; font-weight: 600; cursor: pointer; }
+details .chips, details .list { margin-top: 4px; }
+@media (prefers-reduced-motion: no-preference) {
+  .big, .tile, .row, .chip { transition: transform 0.08s ease; }
+  .big:active, .tile:active, .row:active { transform: scale(0.985); }
+}
+</style>
+</head>
+<body>
+<main class="app" id="app"></main>
+<div class="bar" id="bar" hidden></div>
+
+<script>
+(function () {
+  var KEY = 'whoDrinksWhat.v1';
+  var SKEY = 'whoDrinksWhat.shift.v1';
+  var SHIFT_MS = 10 * 60 * 60 * 1000;
+  var app = document.getElementById('app');
+
+  function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 6); }
+
+  function h(tag, props) {
+    var e = document.createElement(tag);
+    var p = props || {};
+    Object.keys(p).forEach(function (k) {
+      var v = p[k];
+      if (v === false || v == null) return;
+      if (k === 'class') e.className = v;
+      else if (k === 'value') e.value = v;
+      else if (k.indexOf('on') === 0) e.addEventListener(k.slice(2), v);
+      else e.setAttribute(k, v === true ? '' : String(v));
+    });
+    Array.prototype.slice.call(arguments, 2).forEach(function add(c) {
+      if (Array.isArray(c)) { c.forEach(add); return; }
+      if (c == null || c === false) return;
+      e.append(c.nodeType ? c : document.createTextNode(String(c)));
+    });
+    return e;
+  }
+
+  /* ---------- data ---------- */
+  var SEED_DRINKS = ['Bud Light', 'Kokanee', 'Canadian', 'Coors Light', 'Guinness', 'Cider',
+    'Rye & Ginger', 'Rye & Coke', 'Rum & Coke', 'Vodka Soda', 'Gin & Tonic', 'Caesar',
+    'Red Wine', 'White Wine', 'Coffee', 'Tea', 'Coke', 'Ginger Ale', 'Orange Juice', 'Water'];
+
+  function seed() {
+    var drinks = SEED_DRINKS.map(function (n) { return { id: uid(), name: n }; });
+    function by(n) { return drinks.filter(function (d) { return d.name === n; })[0].id; }
+    return {
+      drinks: drinks,
+      people: [
+        { id: uid(), name: 'Doug', drinks: [by('Rye & Ginger')], notes: 'Tall, red cap, sits by the window', ex: true },
+        { id: uid(), name: 'Marlene', drinks: [by('Red Wine'), by('Coffee')], notes: 'Coffee after nine. Cash.', ex: true },
+        { id: uid(), name: 'Walt', drinks: [by('Kokanee')], notes: 'Always on the bar stool nearest the door', ex: true }
+      ]
+    };
+  }
+
+  function normalize(d) {
+    d.order = Array.isArray(d.order) ? d.order.filter(function (i) {
+      return i && typeof i.pid === 'string' && typeof i.did === 'string' && i.qty > 0;
+    }) : [];
+    var s = d.shift;
+    d.shift = s && Array.isArray(s.entries) ? {
+      start: s.start || null,
+      entries: s.entries.filter(function (e) {
+        return e && Array.isArray(e.items) && e.items.every(function (i) {
+          return i && typeof i.pid === 'string' && typeof i.pname === 'string' && typeof i.dname === 'string' && i.qty > 0;
+        });
+      })
+    } : { start: null, entries: [] };
+    return d;
+  }
+
+  function valid(d) {
+    return d && Array.isArray(d.drinks) && Array.isArray(d.people) &&
+      d.drinks.every(function (x) { return x && typeof x.id === 'string' && typeof x.name === 'string'; }) &&
+      d.people.every(function (p) { return p && typeof p.id === 'string' && typeof p.name === 'string' && Array.isArray(p.drinks); });
+  }
+
+  function load() {
+    try {
+      var raw = localStorage.getItem(KEY);
+      if (raw) { var d = JSON.parse(raw); if (valid(d)) return normalize(d); }
+    } catch (e) {}
+    return seed();
+  }
+
+  function loadAll() {
+    var d = load();
+    try {
+      var rs = localStorage.getItem(SKEY);
+      if (rs) {
+        var s = JSON.parse(rs);
+        if (s && Date.now() - (s.touched || 0) < SHIFT_MS) { d.order = s.order; d.shift = s.shift; }
+        else { d.order = []; d.shift = null; }
+      }
+    } catch (e) {}
+    return d;
+  }
+  var data = normalize(loadAll());
+  function save() {
+    try { localStorage.setItem(KEY, JSON.stringify({ drinks: data.drinks, people: data.people })); } catch (e) {}
+    try { localStorage.setItem(SKEY, JSON.stringify({ order: data.order, shift: data.shift, touched: Date.now() })); } catch (e) {}
+  }
+
+  function byName(a, b) { return a.name.localeCompare(b.name, undefined, { sensitivity: 'base' }); }
+  function drinkById(id) { return data.drinks.filter(function (d) { return d.id === id; })[0]; }
+  function personById(id) { return data.people.filter(function (p) { return p.id === id; })[0]; }
+  function drinkNames(p) {
+    return p.drinks.map(drinkById).filter(Boolean).sort(byName).map(function (d) { return d.name; });
+  }
+
+  /* ---------- order + shift ---------- */
+  function qtyOf(pid, did) {
+    var m = data.order.filter(function (i) { return i.pid === pid && i.did === did; })[0];
+    return m ? m.qty : 0;
+  }
+  function addItem(pid, did, n) {
+    var m = data.order.filter(function (i) { return i.pid === pid && i.did === did; })[0];
+    if (m) m.qty += n || 1; else data.order.push({ pid: pid, did: did, qty: n || 1 });
+    save(); renderBar();
+  }
+  function cleanOrder() {
+    data.order = data.order.filter(function (i) { return personById(i.pid) && drinkById(i.did); });
+  }
+  function orderCount() { return data.order.reduce(function (s, i) { return s + i.qty; }, 0); }
+  function clock(ts) {
+    try { return new Date(ts).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }); } catch (e) { return ''; }
+  }
+  function shiftSummary() {
+    var drinks = 0, tabs = {};
+    data.shift.entries.forEach(function (e) { e.items.forEach(function (i) { drinks += i.qty; tabs[i.pid] = 1; }); });
+    var t = Object.keys(tabs).length;
+    if (!drinks) return 'Nothing entered yet';
+    return drinks + (drinks === 1 ? ' drink' : ' drinks') + ' entered for ' + t + (t === 1 ? ' tab' : ' tabs');
+  }
+  function addBtn(pid, did, label) {
+    var b = h('button', { class: 'addbtn', type: 'button', 'aria-label': 'Add to order' });
+    function paint() {
+      var q = qtyOf(pid, did);
+      b.textContent = q ? 'Added ×' + q : (label || '+ Add');
+      b.setAttribute('aria-pressed', q ? 'true' : 'false');
+    }
+    b.addEventListener('click', function () { addItem(pid, did); paint(); });
+    paint();
+    return b;
+  }
+  function orderChip(pid, d) {
+    var b = h('button', { class: 'chip dchip', type: 'button' });
+    function paint() {
+      var q = qtyOf(pid, d.id);
+      b.textContent = q ? d.name + ' ×' + q : '+ ' + d.name;
+      b.setAttribute('aria-pressed', q ? 'true' : 'false');
+    }
+    b.addEventListener('click', function () { addItem(pid, d.id); paint(); });
+    paint();
+    return b;
+  }
+  function entered() {
+    if (!data.order.length) return;
+    var items = data.order.map(function (i) {
+      return { pid: i.pid, pname: personById(i.pid).name, did: i.did, dname: drinkById(i.did).name, qty: i.qty };
+    });
+    var n = items.reduce(function (s, i) { return s + i.qty; }, 0);
+    if (!data.shift.start) data.shift.start = Date.now();
+    data.shift.entries.push({ id: uid(), t: Date.now(), items: items });
+    data.order = [];
+    save();
+    toHome('Entered ' + n + (n === 1 ? ' drink' : ' drinks') + '. Added to the shift table.', true);
+  }
+  function undoLast() {
+    var e = data.shift.entries.pop();
+    if (!e) return;
+    e.items.forEach(function (it) {
+      if (personById(it.pid) && drinkById(it.did)) addItem(it.pid, it.did, it.qty);
+    });
+    if (!data.shift.entries.length) data.shift.start = null;
+    save();
+    stack = [{ name: 'home' }]; view = { name: 'order' }; render();
+  }
+  function sameAgain(pid) {
+    return h('button', { class: 'btn', type: 'button', onclick: function () {
+      for (var k = data.shift.entries.length - 1; k >= 0; k--) {
+        var mine = data.shift.entries[k].items.filter(function (it) { return it.pid === pid && drinkById(it.did); });
+        if (mine.length) { mine.forEach(function (it) { addItem(pid, it.did, it.qty); }); break; }
+      }
+      render(true);
+    } }, 'Same again');
+  }
+  function renderBar() {
+    var bar = document.getElementById('bar');
+    var n = orderCount();
+    var show = n > 0 && view.name !== 'order' && view.name !== 'form';
+    bar.hidden = !show;
+    document.body.classList.toggle('has-bar', show);
+    if (!show) return;
+    bar.replaceChildren(h('button', { type: 'button', onclick: function () { go({ name: 'order' }); } },
+      h('span', {}, 'Order to enter'),
+      h('span', {}, n + (n === 1 ? ' drink' : ' drinks') + ' ›')));
+  }
+
+  /* ---------- navigation ---------- */
+  var stack = [];
+  var view = { name: 'home' };
+  var flash = null;
+  var shiftMode = 'person';
+
+  function go(v) { stack.push(view); view = v; render(); }
+  function back() { view = stack.pop() || { name: 'home' }; render(); }
+  function toHome(msg, undo) { stack = []; view = { name: 'home' }; flash = msg ? { msg: msg, undo: !!undo } : null; render(); }
+
+  function header(title) {
+    return h('div', { class: 'top' },
+      h('button', { class: 'back', type: 'button', onclick: back }, '← Back'),
+      h('h1', {}, title));
+  }
+
+  function personRow(p, sub) {
+    return h('button', { class: 'row', type: 'button', onclick: function () { go({ name: 'person', id: p.id }); } },
+      h('span', { class: 'nm' }, p.name, p.ex ? h('span', { class: 'tag' }, 'example') : null),
+      sub ? h('span', { class: 'sub' }, sub) : null);
+  }
+
+  /* ---------- views ---------- */
+  function homeV() {
+    var hasEx = data.people.some(function (p) { return p.ex; });
+    var out = [h('h1', {}, 'Who drinks what')];
+    if (flash) {
+      out.push(h('div', { class: 'flash', role: 'status' },
+        h('span', {}, flash.msg),
+        flash.undo ? h('button', { class: 'btn', type: 'button', onclick: undoLast }, 'Undo') : null));
+      flash = null;
+    }
+    out.push(
+      h('button', { class: 'big', type: 'button', onclick: function () { go({ name: 'drinks' }); } },
+        h('strong', {}, 'Regular drink'), h('span', {}, 'Pick a drink, see who has it')),
+      h('button', { class: 'big', type: 'button', onclick: function () { go({ name: 'names' }); } },
+        h('strong', {}, 'Regular name'), h('span', {}, 'Pick a name, see their drinks')),
+      h('button', { class: 'big primary', type: 'button', onclick: function () { go({ name: 'form', id: null }); } },
+        h('strong', {}, 'New'), h('span', {}, 'Add someone')),
+      h('button', { class: 'big', type: 'button', onclick: function () { go({ name: 'shift' }); } },
+        h('strong', {}, 'Shift table'), h('span', {}, data.shift.entries.length ? shiftSummary() + '. Tap to reorder.' : 'Entered drinks land here, ready to reorder')),
+      h('div', { class: 'actions' },
+        h('button', { class: 'btn link', type: 'button', onclick: function () { go({ name: 'backup' }); } }, 'Backup'),
+        hasEx ? h('button', { class: 'btn link', type: 'button', onclick: function () {
+          data.people = data.people.filter(function (p) { return !p.ex; });
+          save(); toHome('Example people removed.');
+        } }, 'Remove example people') : null),
+      h('p', { class: 'muted small' }, (offlineReady ? 'Ready to work offline. ' : 'Open once with internet to switch on offline use. ') + 'Regulars are saved on this device. The shift table clears itself after the shift.'));
+    return out;
+  }
+
+  function drinksV() {
+    var grid = h('div', { class: 'grid' });
+    data.drinks.slice().sort(byName).forEach(function (d) {
+      var n = data.people.filter(function (p) { return p.drinks.indexOf(d.id) > -1; }).length;
+      grid.append(h('button', { class: 'tile', type: 'button', onclick: function () { go({ name: 'drink', id: d.id }); } },
+        h('span', {}, d.name), h('span', { class: 'count' }, n === 1 ? '1 person' : n + ' people')));
+    });
+    return [header('Pick a drink'), grid,
+      h('div', { class: 'actions' },
+        h('button', { class: 'btn', type: 'button', onclick: function () { go({ name: 'manage' }); } }, 'Edit drink list'))];
+  }
+
+  function drinkV(v) {
+    var d = drinkById(v.id);
+    if (!d) return [header('Pick a drink')];
+    var people = data.people.filter(function (p) { return p.drinks.indexOf(d.id) > -1; }).sort(byName);
+    var list = h('div', { class: 'list' });
+    if (!people.length) list.append(h('p', { class: 'muted' }, 'Nobody has this one yet. Add it to someone from New or from their page.'));
+    people.forEach(function (p) {
+      list.append(h('div', { class: 'pair' }, personRow(p, p.notes), addBtn(p.id, d.id)));
+    });
+    var others = data.people.filter(function (p) { return p.drinks.indexOf(d.id) < 0; }).sort(byName);
+    var more = h('div', { class: 'list' });
+    others.forEach(function (p) {
+      more.append(h('div', { class: 'pair' }, personRow(p, drinkNames(p).join(', ')), addBtn(p.id, d.id)));
+    });
+    return [header(d.name), list,
+      others.length ? h('details', {}, h('summary', {}, 'Someone else is ordering this'), more) : null];
+  }
+
+  function namesV() {
+    var search = h('input', { type: 'text', id: 'name-search', placeholder: 'Search names or notes', autocomplete: 'off', 'aria-label': 'Search names or notes' });
+    var list = h('div', { class: 'list' });
+    function fill() {
+      var q = search.value.trim().toLowerCase();
+      var people = data.people.slice().sort(byName).filter(function (p) {
+        return !q || p.name.toLowerCase().indexOf(q) > -1 || (p.notes || '').toLowerCase().indexOf(q) > -1;
+      });
+      list.replaceChildren();
+      if (!people.length) {
+        list.append(h('p', { class: 'muted' }, q ? 'No match.' : 'No one saved yet. Tap New on the home screen.'));
+        return;
+      }
+      var last = '';
+      people.forEach(function (p) {
+        var L = p.name.charAt(0).toUpperCase() || '#';
+        if (L !== last && !q) { list.append(h('div', { class: 'letter' }, L)); last = L; }
+        list.append(personRow(p, drinkNames(p).join(', ')));
+      });
+    }
+    search.addEventListener('input', fill);
+    fill();
+    return [header('Pick a name'), search, list];
+  }
+
+  function personV(v) {
+    var p = personById(v.id);
+    if (!p) return [header('Not found')];
+    var dlist = p.drinks.map(drinkById).filter(Boolean).sort(byName);
+    var actions = h('div', { class: 'actions' });
+    function normal() {
+      actions.replaceChildren(
+        h('button', { class: 'btn accent', type: 'button', onclick: function () { go({ name: 'form', id: p.id }); } }, 'Edit'),
+        h('button', { class: 'btn', type: 'button', onclick: confirmDelete }, 'Delete'));
+    }
+    function confirmDelete() {
+      actions.replaceChildren(
+        h('span', { class: 'label' }, 'Delete ' + p.name + ' for good?'),
+        h('button', { class: 'btn accent', type: 'button', onclick: function () {
+          data.people = data.people.filter(function (x) { return x.id !== p.id; });
+          save(); stack.pop(); view = stack.pop() || { name: 'home' }; stack = []; toHome(p.name + ' deleted.');
+        } }, 'Yes, delete'),
+        h('button', { class: 'btn', type: 'button', onclick: normal }, 'Keep'));
+    }
+    normal();
+    return [header(p.name + (p.ex ? ' (example)' : '')),
+      h('div', { class: 'field' }, h('span', { class: 'label' }, 'Tap a drink to add it to the order'),
+        dlist.length ? h('div', { class: 'chips' }, dlist.map(function (d) { return orderChip(p.id, d); }))
+          : h('p', { class: 'muted' }, 'No drinks picked yet. Tap Edit to add some.')),
+      h('details', {}, h('summary', {}, 'A different drink tonight'),
+        h('div', { class: 'chips' }, data.drinks.slice().sort(byName).filter(function (d) { return p.drinks.indexOf(d.id) < 0; }).map(function (d) { return orderChip(p.id, d); }))),
+      p.notes ? h('div', { class: 'field' }, h('span', { class: 'label' }, 'Notes'), h('div', { class: 'notes' }, p.notes)) : null,
+      actions];
+  }
+
+  function formV(v) {
+    var editing = v.id ? personById(v.id) : null;
+    var p = editing || { name: '', drinks: [], notes: '' };
+    var sel = {};
+    p.drinks.forEach(function (id) { sel[id] = true; });
+
+    var nameIn = h('input', { type: 'text', id: 'f-name', autocomplete: 'off', autocapitalize: 'words', placeholder: 'First name or nickname', value: p.name });
+    var notesIn = h('textarea', { id: 'f-notes', placeholder: 'Tall, red cap, sits by the window', value: p.notes || '' });
+    var chips = h('div', { class: 'chips' });
+    var err = h('p', { class: 'err', role: 'alert' });
+
+    function addChip(d) {
+      var b = h('button', { type: 'button', class: 'chip', 'aria-pressed': sel[d.id] ? 'true' : 'false' }, d.name);
+      b.addEventListener('click', function () {
+        sel[d.id] = !sel[d.id];
+        b.setAttribute('aria-pressed', sel[d.id] ? 'true' : 'false');
+      });
+      chips.append(b);
+    }
+    data.drinks.slice().sort(byName).forEach(addChip);
+
+    var newDrink = h('input', { type: 'text', id: 'f-newdrink', placeholder: 'Drink not listed? Type it here', autocomplete: 'off' });
+    function addDrink() {
+      var n = newDrink.value.trim();
+      if (!n) return;
+      var existing = data.drinks.filter(function (d) { return d.name.toLowerCase() === n.toLowerCase(); })[0];
+      if (existing) { newDrink.value = ''; err.textContent = existing.name + ' is already in the list.'; return; }
+      var d = { id: uid(), name: n };
+      data.drinks.push(d); save();
+      sel[d.id] = true;
+      addChip(d);
+      newDrink.value = ''; err.textContent = '';
+    }
+
+    function onSave(andOrder) {
+      var name = nameIn.value.trim();
+      if (!name) { err.textContent = 'Add a name first, even a nickname.'; nameIn.focus(); return; }
+      var picked = Object.keys(sel).filter(function (id) { return sel[id] && drinkById(id); });
+      if (andOrder && !picked.length) { err.textContent = 'Tap at least one drink first.'; return; }
+      if (editing) {
+        editing.name = name; editing.drinks = picked; editing.notes = notesIn.value.trim();
+        delete editing.ex;
+        if (andOrder) picked.forEach(function (id) { addItem(editing.id, id); });
+        save(); back();
+      } else {
+        var np = { id: uid(), name: name, drinks: picked, notes: notesIn.value.trim() };
+        data.people.push(np);
+        if (andOrder) picked.forEach(function (id) { addItem(np.id, id); });
+        save(); toHome(andOrder ? 'Saved ' + name + ' and added their drinks to the order.' : 'Saved ' + name + '.');
+      }
+    }
+
+    return [header(editing ? 'Edit ' + editing.name : 'New regular'),
+      h('div', { class: 'field' }, h('label', { for: 'f-name' }, 'Name'), nameIn),
+      h('div', { class: 'field' }, h('span', { class: 'label' }, 'Drinks (tap all that apply)'), chips),
+      h('div', { class: 'inline' }, newDrink,
+        h('button', { class: 'btn', type: 'button', onclick: addDrink }, 'Add drink')),
+      h('div', { class: 'field' }, h('label', { for: 'f-notes' }, 'Notes'), notesIn),
+      err,
+      h('div', { class: 'actions' },
+        h('button', { class: 'btn accent', type: 'button', onclick: function () { onSave(false); } }, 'Save'),
+        h('button', { class: 'btn', type: 'button', onclick: function () { onSave(true); } }, 'Save and add to order'),
+        h('button', { class: 'btn', type: 'button', onclick: back }, 'Cancel'))];
+  }
+
+  function manageV() {
+    var list = h('div', { class: 'list' });
+    var newIn = h('input', { type: 'text', id: 'm-new', placeholder: 'New drink', autocomplete: 'off' });
+    var msg = h('p', { class: 'err', role: 'alert' });
+
+    function fill() {
+      list.replaceChildren();
+      data.drinks.slice().sort(byName).forEach(function (d) {
+        var inp = h('input', { type: 'text', 'aria-label': 'Drink name', value: d.name });
+        inp.addEventListener('change', function () {
+          var n = inp.value.trim();
+          if (!n) { inp.value = d.name; return; }
+          d.name = n; save();
+        });
+        var del = h('button', { class: 'btn', type: 'button' }, 'Delete');
+        var armed = false, timer = null;
+        del.addEventListener('click', function () {
+          if (!armed) {
+            armed = true; del.textContent = 'Tap again';
+            timer = setTimeout(function () { armed = false; del.textContent = 'Delete'; }, 3000);
+            return;
+          }
+          clearTimeout(timer);
+          data.drinks = data.drinks.filter(function (x) { return x.id !== d.id; });
+          data.people.forEach(function (p) { p.drinks = p.drinks.filter(function (id) { return id !== d.id; }); });
+          save(); fill();
+        });
+        list.append(h('div', { class: 'drow' }, inp, del));
+      });
+    }
+    function add() {
+      var n = newIn.value.trim();
+      if (!n) return;
+      if (data.drinks.some(function (d) { return d.name.toLowerCase() === n.toLowerCase(); })) {
+        msg.textContent = n + ' is already in the list.'; return;
+      }
+      data.drinks.push({ id: uid(), name: n }); save();
+      newIn.value = ''; msg.textContent = ''; fill();
+    }
+    fill();
+    return [header('Drink list'),
+      h('p', { class: 'muted' }, 'Rename a drink by editing it. Deleting a drink also takes it off everyone who had it.'),
+      h('div', { class: 'inline' }, newIn, h('button', { class: 'btn accent', type: 'button', onclick: add }, 'Add')),
+      msg, list];
+  }
+
+  function backupV() {
+    var ta = h('textarea', { id: 'b-out', readonly: true, 'aria-label': 'Backup text' });
+    ta.value = JSON.stringify({ drinks: data.drinks, people: data.people });
+    var status = h('p', { class: 'muted', role: 'status' });
+    var copyBtn = h('button', { class: 'btn accent', type: 'button' }, 'Copy backup');
+    copyBtn.addEventListener('click', function () {
+      var p;
+      try { p = navigator.clipboard.writeText(ta.value); } catch (e) { p = Promise.reject(e); }
+      p.then(function () { status.textContent = 'Copied. Paste it into Notes or an email to yourself.'; })
+        .catch(function () { ta.focus(); ta.select(); status.textContent = 'Could not copy automatically. The text is selected, so use Copy from the pop-up menu.'; });
+    });
+
+    var inTa = h('textarea', { id: 'b-in', placeholder: 'Paste a backup here' });
+    var restoreBtn = h('button', { class: 'btn', type: 'button' }, 'Restore');
+    var rStatus = h('p', { class: 'err', role: 'alert' });
+    var armed = false;
+    restoreBtn.addEventListener('click', function () {
+      var d;
+      try { d = JSON.parse(inTa.value); } catch (e) { d = null; }
+      if (!valid(d)) { rStatus.textContent = 'That does not look like a backup from this app.'; armed = false; restoreBtn.textContent = 'Restore'; return; }
+      if (!armed) {
+        armed = true; rStatus.textContent = '';
+        restoreBtn.textContent = 'Tap again to replace everything here';
+        return;
+      }
+      var keepO = data.order, keepS = data.shift;
+      data = normalize({ drinks: d.drinks, people: d.people });
+      data.order = keepO; data.shift = keepS;
+      save(); toHome('Backup restored: ' + data.people.length + ' people.');
+    });
+
+    return [header('Backup'),
+      h('p', { class: 'muted' }, 'Your regulars live only on this device. If the iPad is reset, they go too, so copy a backup now and then. The backup holds regulars and their drinks. The shift table is not included.'),
+      h('div', { class: 'field' }, h('label', { for: 'b-out' }, 'Your backup'), ta),
+      h('div', { class: 'actions' }, copyBtn), status,
+      h('div', { class: 'field' }, h('label', { for: 'b-in' }, 'Restore from a backup'), inTa),
+      h('div', { class: 'actions' }, restoreBtn), rStatus];
+  }
+
+  function orderV() {
+    var groups = [], idx = {};
+    data.order.forEach(function (i) {
+      if (idx[i.pid] == null) { idx[i.pid] = groups.length; groups.push({ pid: i.pid, items: [] }); }
+      groups[idx[i.pid]].items.push(i);
+    });
+    var total = orderCount();
+    var out = [header('Enter in the POS')];
+    if (!total) {
+      out.push(h('p', { class: 'muted' }, 'Nothing here yet. Open a drink or a name and tap Add.'));
+      return out;
+    }
+    out.push(h('p', { class: 'muted' }, total + (total === 1 ? ' drink' : ' drinks') + ' for ' + groups.length + (groups.length === 1 ? ' tab' : ' tabs') + '. Ring them in, then tap Entered.'));
+    function bump(item, delta) {
+      item.qty += delta;
+      if (item.qty <= 0) data.order = data.order.filter(function (x) { return x !== item; });
+      save(); render(true);
+    }
+    groups.forEach(function (g) {
+      var pp = personById(g.pid);
+      var box = h('section', { class: 'group' }, h('h2', {}, pp.name),
+        pp.notes ? h('span', { class: 'muted small' }, pp.notes) : null);
+      g.items.forEach(function (i) {
+        box.append(h('div', { class: 'line' },
+          h('span', { class: 'dn' }, drinkById(i.did).name),
+          h('span', { class: 'step' },
+            h('button', { type: 'button', 'aria-label': 'One fewer', onclick: function () { bump(i, -1); } }, '−'),
+            h('span', { class: 'q' }, i.qty),
+            h('button', { type: 'button', 'aria-label': 'One more', onclick: function () { bump(i, 1); } }, '+'))));
+      });
+      out.push(box);
+    });
+    var clearBtn = h('button', { class: 'btn', type: 'button' }, 'Clear order');
+    var armed = false;
+    clearBtn.addEventListener('click', function () {
+      if (!armed) { armed = true; clearBtn.textContent = 'Tap again to clear'; return; }
+      data.order = []; save(); render();
+    });
+    out.push(
+      h('button', { class: 'big primary', type: 'button', onclick: entered },
+        h('strong', {}, 'Entered'), h('span', {}, 'Adds it to the shift table and clears this list')),
+      h('div', { class: 'actions' }, clearBtn));
+    return out;
+  }
+
+  function shiftV() {
+    var groups = {}, list = [];
+    data.shift.entries.forEach(function (e) {
+      e.items.forEach(function (i) {
+        var g = groups[i.pid];
+        if (!g) { g = groups[i.pid] = { pid: i.pid, name: i.pname, drinks: {}, dids: {}, last: 0 }; list.push(g); }
+        g.name = i.pname;
+        g.drinks[i.dname] = (g.drinks[i.dname] || 0) + i.qty;
+        g.dids[i.dname] = i.did;
+        g.last = Math.max(g.last, e.t);
+      });
+    });
+    list.sort(byName);
+    var out = [header('Shift table')];
+    if (!list.length) {
+      out.push(h('p', { class: 'muted' }, 'Nothing entered yet. When you tap Entered, the order shows up here as a table you can reorder from.'));
+      return out;
+    }
+    out.push(h('p', { class: 'muted' }, shiftSummary() + (data.shift.start ? ', since ' + clock(data.shift.start) : '') + '.' + (shiftMode === 'person' ? ' Tap + Again to put a drink back on the order.' : '')));
+    var seg = h('div', { class: 'chips' });
+    [['person', 'By person'], ['drink', 'By drink']].forEach(function (m) {
+      seg.append(h('button', { class: 'chip', type: 'button', 'aria-pressed': shiftMode === m[0] ? 'true' : 'false', onclick: function () { shiftMode = m[0]; render(true); } }, m[1]));
+    });
+    out.push(seg);
+    if (shiftMode === 'drink') {
+      var totals = {}, all = 0;
+      list.forEach(function (g) {
+        Object.keys(g.drinks).forEach(function (k) { totals[k] = (totals[k] || 0) + g.drinks[k]; all += g.drinks[k]; });
+      });
+      var tbox = h('section', { class: 'group' }, h('h2', {}, 'Total for the shift'));
+      Object.keys(totals).sort(function (a, b) { return totals[b] - totals[a] || a.localeCompare(b); }).forEach(function (k) {
+        tbox.append(h('div', { class: 'line' }, h('span', { class: 'dn' }, k), h('span', { class: 'tot' }, '× ' + totals[k])));
+      });
+      tbox.append(h('div', { class: 'line' }, h('span', { class: 'dn' }, 'All drinks'), h('span', { class: 'tot' }, '× ' + all)));
+      out.push(tbox);
+    } else list.forEach(function (g) {
+      var pp = personById(g.pid);
+      var box = h('section', { class: 'group' },
+        h('div', { class: 'line' }, h('h2', {}, g.name), pp ? sameAgain(g.pid) : null),
+        pp && pp.notes ? h('span', { class: 'muted small' }, pp.notes) : null);
+      Object.keys(g.drinks).sort().forEach(function (k) {
+        var did = g.dids[k];
+        box.append(h('div', { class: 'line' },
+          h('span', { class: 'dn' }, k, h('span', { class: 'sofar' }, ' · ' + g.drinks[k] + ' so far')),
+          pp && drinkById(did) ? addBtn(g.pid, did, '+ Again') : null));
+      });
+      box.append(h('span', { class: 'muted small' }, 'Last entered ' + clock(g.last)));
+      out.push(box);
+    });
+    var newBtn = h('button', { class: 'btn', type: 'button' }, 'Start a new shift');
+    var armed = false;
+    newBtn.addEventListener('click', function () {
+      if (!armed) { armed = true; newBtn.textContent = 'Tap again to clear this shift'; return; }
+      data.shift = { start: null, entries: [] }; save(); render();
+    });
+    out.push(
+      h('div', { class: 'actions' },
+        h('button', { class: 'btn', type: 'button', onclick: undoLast }, 'Undo last entry'), newBtn),
+      h('p', { class: 'muted small' }, 'Undo puts the last entry back in the order. This table clears itself 10 hours after your last tap, or tap Start a new shift.'));
+    return out;
+  }
+
+  var views = { home: homeV, drinks: drinksV, drink: drinkV, names: namesV, person: personV, form: formV, manage: manageV, backup: backupV, order: orderV, shift: shiftV };
+
+  function render(keep) {
+    cleanOrder();
+    app.replaceChildren.apply(app, views[view.name](view).filter(Boolean));
+    renderBar();
+    if (keep !== true) window.scrollTo(0, 0);
+  }
+
+  var offlineReady = false;
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.ready.then(function () {
+      offlineReady = true;
+      if (view.name === 'home') render(true);
+    }).catch(function () {});
+  }
+
+  render();
+})();
+</script>
+
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', function () {
+    navigator.serviceWorker.register('sw.js').catch(function () {});
+  });
+}
+try {
+  if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(function () {});
+} catch (e) {}
+</script>
+</body>
+</html>
